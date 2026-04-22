@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바이블 골든벨 · Bible Golden Bell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400;1,600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0b08; --bg-soft: #15110c; --bg-card: #1c1711;
+    --gold: #c9a961; --gold-bright: #e6c981; --gold-deep: #8b6f2f;
+    --ink: #ede6d3; --ink-dim: #a8a08e; --ink-soft: #726a59;
+    --crimson: #8b2c1f; --emerald: #4a7c59;
+    --border: rgba(201, 169, 97, 0.18);
+    --border-strong: rgba(201, 169, 97, 0.4);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Manrope', 'Noto Serif KR', sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.6; overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 15% 20%, rgba(201, 169, 97, 0.1) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 80%, rgba(139, 44, 31, 0.08) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+    opacity: 0.03; pointer-events: none; z-index: 0;
+  }
+  #app { position: relative; z-index: 1; min-height: 100vh; padding: 40px 20px; display: flex; justify-content: center; }
+  .screen { width: 100%; max-width: 780px; display: none; animation: fadeUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .screen.active { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .eyebrow {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    color: var(--gold); letter-spacing: 0.3em; text-transform: uppercase;
+    font-size: 12px; font-weight: 500;
+  }
+
+  .hero { text-align: center; margin-bottom: 40px; padding-top: 10px; }
+  .bell-icon {
+    width: 68px; height: 68px; margin: 0 auto 20px;
+    filter: drop-shadow(0 0 24px rgba(201, 169, 97, 0.4));
+    animation: swing 4s ease-in-out infinite; transform-origin: top center;
+  }
+  @keyframes swing { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  .hero-title {
+    font-family: 'Noto Serif KR', serif; font-weight: 900;
+    font-size: clamp(32px, 6vw, 48px);
+    letter-spacing: -0.02em; line-height: 1.1;
+    color: var(--ink); margin-bottom: 6px;
+  }
+  .hero-title .accent { color: var(--gold-bright); }
+  .hero-sub {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 17px; color: var(--ink-dim); letter-spacing: 0.05em;
+  }
+  .ornament {
+    display: flex; align-items: center; justify-content: center;
+    gap: 14px; margin: 16px 0 24px;
+  }
+  .ornament::before, .ornament::after {
+    content: ''; height: 1px; flex: 1; max-width: 80px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .ornament-diamond {
+    width: 7px; height: 7px; transform: rotate(45deg);
+    background: var(--gold); box-shadow: 0 0 10px rgba(201, 169, 97, 0.6);
+  }
+
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 32px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    position: relative;
+  }
+  .card::before {
+    content: ''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border: 1px solid rgba(201, 169, 97, 0.08); pointer-events: none;
+  }
+
+  .field { margin-bottom: 24px; position: relative; z-index: 1; }
+  .field-label {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 19px; font-weight: 600; color: var(--gold);
+    margin-bottom: 10px; letter-spacing: 0.02em;
+  }
+  .field-label .ko {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 14px; font-weight: 500; color: var(--ink); margin-left: 10px;
+  }
+  .field-label .value {
+    font-family: 'Manrope', sans-serif; font-size: 13px;
+    color: var(--gold-bright); font-weight: 500;
+  }
+
+  select, input[type="number"], input[type="text"], input[type="password"] {
+    width: 100%; background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--ink); padding: 13px 16px;
+    font-family: 'Noto Serif KR', sans-serif; font-size: 15px; border-radius: 0;
+    transition: all 0.25s;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.12); }
+  select { cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath fill='%23c9a961' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center; background-size: 10px; padding-right: 40px;
+  }
+
+  .difficulty-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .diff-btn {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--ink-dim); padding: 16px 10px;
+    font-family: 'Noto Serif KR', serif; font-weight: 600; font-size: 16px;
+    cursor: pointer; transition: all 0.25s; text-align: center;
+  }
+  .diff-btn .en {
+    display: block; font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 11px; color: var(--ink-soft); margin-top: 3px; letter-spacing: 0.1em;
+  }
+  .diff-btn:hover { border-color: var(--gold-deep); color: var(--ink); }
+  .diff-btn.active {
+    background: linear-gradient(180deg, var(--gold-deep), #6b5423);
+    border-color: var(--gold); color: var(--bg);
+    box-shadow: 0 8px 20px -8px rgba(201, 169, 97, 0.4);
+  }
+  .diff-btn.active .en { color: rgba(13, 11, 8, 0.7); }
+
+  input[type="range"] {
+    width: 100%; -webkit-appearance: none; appearance: none;
+    height: 3px; background: var(--border); outline: none; margin: 8px 0; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gold); cursor: pointer; border: 3px solid var(--bg-card);
+    box-shadow: 0 0 0 1px var(--gold), 0 4px 12px rgba(201, 169, 97, 0.3);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--gold); cursor: pointer; border: 3px solid var(--bg-card);
+  }
+  .ratio-display { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .ratio-display > div { padding: 10px 14px; background: var(--bg-soft); border: 1px solid var(--border); }
+  .ratio-display .label { color: var(--ink-dim); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 2px; }
+  .ratio-display .num { color: var(--gold-bright); font-weight: 700; font-size: 22px; font-family: 'Cormorant Garamond', serif; }
+
+  /* ⭐ 새로 추가: 일일 한도 정보 박스 */
+  .quota-info {
+    margin: 20px 0 8px;
+    padding: 18px 22px;
+    background: linear-gradient(180deg, rgba(201, 169, 97, 0.06), rgba(201, 169, 97, 0.02));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    position: relative;
+    z-index: 1;
+  }
+  .quota-info-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .quota-info-title {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .quota-info-estimate {
+    font-family: 'Noto Serif KR', serif; font-weight: 700;
+    color: var(--gold-bright); font-size: 15px;
+  }
+  .quota-info-estimate .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 700; color: var(--gold-bright);
+    margin-right: 2px;
+  }
+  .quota-info-detail {
+    font-family: 'Manrope', sans-serif; font-size: 12px;
+    color: var(--ink-dim); line-height: 1.6;
+  }
+  .quota-info-detail strong { color: var(--ink); font-weight: 600; }
+  .quota-info-breakdown {
+    display: flex; gap: 16px; margin-top: 8px;
+    font-size: 11px; color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif; letter-spacing: 0.05em;
+  }
+  .quota-info-breakdown span { display: inline-flex; align-items: center; gap: 6px; }
+  .quota-info-breakdown .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .quota-info-breakdown .dot.gen { background: var(--gold); }
+  .quota-info-breakdown .dot.grade { background: var(--emerald); }
+
+  .btn-primary {
+    width: 100%; background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+    color: var(--bg); border: none; padding: 17px 28px;
+    font-family: 'Noto Serif KR', serif; font-size: 17px; font-weight: 700;
+    letter-spacing: 0.05em; cursor: pointer; transition: all 0.3s;
+    margin-top: 16px; position: relative; overflow: hidden;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -15px rgba(201, 169, 97, 0.5); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary::before {
+    content: ''; position: absolute; top: 50%; left: -100%; width: 60%; height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: translateY(-50%) rotate(20deg); transition: left 0.6s;
+  }
+  .btn-primary:hover::before { left: 150%; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-primary:disabled::before { display: none; }
+
+  .loading-wrap { text-align: center; padding: 80px 20px; }
+  .loading-bell {
+    width: 96px; height: 96px; margin: 0 auto 36px;
+    filter: drop-shadow(0 0 32px rgba(201, 169, 97, 0.6));
+    animation: bellRing 1.2s ease-in-out infinite; transform-origin: 50% 15%;
+  }
+  @keyframes bellRing { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+  .loading-status { font-family: 'Noto Serif KR', serif; font-size: 21px; color: var(--gold-bright); margin-bottom: 6px; transition: all 0.3s; }
+  .loading-detail { font-family: 'Cormorant Garamond', serif; font-style: italic; color: var(--ink-dim); font-size: 15px; transition: all 0.3s; }
+  .loading-status.warn { color: #e89388; }
+  .loading-progress { max-width: 320px; margin: 30px auto 0; height: 2px; background: var(--border); overflow: hidden; }
+  .loading-progress-bar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, var(--gold-deep), var(--gold-bright), var(--gold-deep));
+    background-size: 200% 100%; animation: shimmer 2s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  .quiz-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+  .quiz-counter { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--ink-dim); letter-spacing: 0.1em; }
+  .quiz-counter .current { color: var(--gold-bright); font-weight: 700; font-size: 20px; font-family: 'Cormorant Garamond', serif; }
+  .quiz-counter .total { font-style: italic; }
+  .quiz-tag {
+    display: inline-block; padding: 4px 12px;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 12px; color: var(--gold); letter-spacing: 0.15em;
+    border: 1px solid var(--border-strong);
+  }
+  .quiz-tag.sa { color: var(--crimson); border-color: rgba(139, 44, 31, 0.5); }
+
+  .progress-track { height: 2px; background: var(--border); margin-bottom: 28px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--gold); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  .question-card { padding: 36px 32px; }
+  .question-ko {
+    font-family: 'Noto Serif KR', serif; font-weight: 500;
+    font-size: clamp(20px, 3.5vw, 26px); line-height: 1.55;
+    color: var(--ink); margin-bottom: 16px;
+  }
+  .question-en {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 15px; color: var(--ink-dim); line-height: 1.5;
+    padding: 14px 18px; border-left: 2px solid var(--gold-deep);
+    background: rgba(201, 169, 97, 0.03); margin-bottom: 28px;
+  }
+  .question-reference {
+    display: inline-block; margin-top: 4px;
+    font-family: 'Cormorant Garamond', serif; font-size: 13px;
+    color: var(--gold); letter-spacing: 0.1em; font-style: normal;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--ink); padding: 16px 20px;
+    font-family: 'Noto Serif KR', sans-serif; font-size: 16px;
+    text-align: left; cursor: pointer; transition: all 0.25s;
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .option:hover:not(:disabled) { border-color: var(--gold); background: rgba(201, 169, 97, 0.05); transform: translateX(4px); }
+  .option:disabled { cursor: default; }
+  .option-letter {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    color: var(--gold); font-size: 18px; min-width: 24px; font-weight: 600;
+  }
+  .option.correct { border-color: var(--emerald); background: rgba(74, 124, 89, 0.15); }
+  .option.correct .option-letter { color: var(--emerald); }
+  .option.wrong { border-color: var(--crimson); background: rgba(139, 44, 31, 0.12); }
+  .option.wrong .option-letter { color: var(--crimson); }
+
+  .sa-input-wrap { position: relative; }
+  .sa-input-wrap textarea {
+    width: 100%; min-height: 80px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    color: var(--ink); padding: 14px 16px;
+    font-family: 'Noto Serif KR', sans-serif; font-size: 16px;
+    resize: vertical; transition: all 0.25s;
+  }
+  .sa-input-wrap textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 169, 97, 0.12); }
+  .sa-input-wrap textarea:disabled { opacity: 0.7; }
+  .sa-submit { margin-top: 12px; }
+
+  .feedback {
+    margin-top: 24px; padding: 24px;
+    border-left: 3px solid var(--gold); background: rgba(201, 169, 97, 0.05);
+    display: none; animation: fadeUp 0.4s ease;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { border-left-color: var(--emerald); background: rgba(74, 124, 89, 0.08); }
+  .feedback.incorrect { border-left-color: var(--crimson); background: rgba(139, 44, 31, 0.08); }
+  .feedback-verdict { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 22px; margin-bottom: 10px; }
+  .feedback.correct .feedback-verdict { color: var(--emerald); }
+  .feedback.incorrect .feedback-verdict { color: var(--crimson); }
+  .feedback-answer { font-family: 'Noto Serif KR', serif; font-size: 15px; color: var(--ink); margin-bottom: 8px; }
+  .feedback-answer strong { color: var(--gold-bright); font-weight: 600; }
+  .feedback-explanation { font-size: 14px; color: var(--ink-dim); line-height: 1.6; }
+
+  .quiz-nav { margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+  .result-hero { text-align: center; padding: 40px 20px 20px; }
+  .result-score {
+    font-family: 'Cormorant Garamond', serif; font-size: clamp(70px, 15vw, 110px);
+    color: var(--gold-bright); line-height: 1; font-weight: 700;
+    text-shadow: 0 0 60px rgba(230, 201, 129, 0.3);
+  }
+  .result-score .divisor { font-size: 0.4em; color: var(--ink-dim); font-style: italic; }
+  .result-percent {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 20px; color: var(--gold); margin-top: 8px; letter-spacing: 0.1em;
+  }
+  .result-grade {
+    font-family: 'Noto Serif KR', serif; font-size: 22px; font-weight: 700;
+    color: var(--ink); margin-top: 16px;
+  }
+
+  .review-list { margin-top: 32px; }
+  .review-item {
+    padding: 20px 24px; margin-bottom: 10px;
+    background: var(--bg-soft); border-left: 3px solid var(--border-strong);
+  }
+  .review-item.correct { border-left-color: var(--emerald); }
+  .review-item.incorrect { border-left-color: var(--crimson); }
+  .review-item-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; font-family: 'Cormorant Garamond', serif;
+    font-style: italic; font-size: 13px; color: var(--gold); letter-spacing: 0.1em;
+  }
+  .review-item-q { font-family: 'Noto Serif KR', serif; font-size: 15px; color: var(--ink); margin-bottom: 6px; line-height: 1.5; }
+  .review-item-a { font-size: 13px; color: var(--ink-dim); }
+  .review-item-a strong { color: var(--gold-bright); }
+
+  .error-box {
+    padding: 20px 24px; background: rgba(139, 44, 31, 0.12);
+    border-left: 3px solid var(--crimson); margin: 20px 0;
+    font-family: 'Noto Serif KR', sans-serif;
+  }
+  .error-box .title {
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 14px; color: #e89388; letter-spacing: 0.15em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .error-box .msg { font-size: 15px; color: var(--ink); line-height: 1.6; }
+  .error-box.quota { background: rgba(201, 169, 97, 0.08); border-left-color: var(--gold); }
+  .error-box.quota .title { color: var(--gold-bright); }
+
+  .footer {
+    text-align: center; margin-top: 60px; padding-bottom: 20px;
+    font-family: 'Cormorant Garamond', serif; font-style: italic;
+    font-size: 13px; color: var(--ink-soft); letter-spacing: 0.1em;
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 24px 18px; }
+    .question-card { padding: 28px 22px; }
+    .difficulty-group { gap: 6px; }
+    .diff-btn { padding: 12px 6px; font-size: 14px; }
+    .quota-info-header { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ SETUP ============ -->
+  <section id="setup-screen" class="screen active">
+    <div class="hero">
+      <svg class="bell-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bellGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e6c981"/><stop offset="100%" stop-color="#8b6f2f"/>
+        </linearGradient></defs>
+        <path d="M32 6 C30 6 29 7 29 9 L29 11 C22 13 17 20 17 28 L17 40 L14 44 L14 47 L50 47 L50 44 L47 40 L47 28 C47 20 42 13 35 11 L35 9 C35 7 34 6 32 6 Z" fill="url(#bellGrad)" stroke="#c9a961" stroke-width="1"/>
+        <circle cx="32" cy="52" r="4" fill="#8b6f2f" stroke="#c9a961" stroke-width="1"/>
+      </svg>
+      <div class="eyebrow">Scripture · Wisdom · Challenge</div>
+      <div class="ornament"><div class="ornament-diamond"></div></div>
+      <h1 class="hero-title">바이블 <span class="accent">골든벨</span></h1>
+      <p class="hero-sub">Read the Word. Ring the Bell.</p>
+    </div>
+
+    <div id="setup-alert"></div>
+
+    <div class="card">
+      <div class="field">
+        <label class="field-label"><span>Scripture <span class="ko">성경</span></span></label>
+        <select id="book-select">
+          <optgroup label="── 구약 Old Testament ──" id="ot-group"></optgroup>
+          <optgroup label="── 신약 New Testament ──" id="nt-group"></optgroup>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label"><span>Difficulty <span class="ko">난이도</span></span></label>
+        <div class="difficulty-group">
+          <button type="button" class="diff-btn" data-diff="하">하<span class="en">Easy</span></button>
+          <button type="button" class="diff-btn active" data-diff="중">중<span class="en">Medium</span></button>
+          <button type="button" class="diff-btn" data-diff="상">상<span class="en">Hard</span></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">
+          <span>Question Count <span class="ko">문제 수</span></span>
+          <span class="value" id="count-display">10</span>
+        </label>
+        <input type="number" id="count-input" min="3" max="50" value="10">
+      </div>
+
+      <div class="field">
+        <label class="field-label">
+          <span>Multiple Choice Ratio <span class="ko">객관식 비율</span></span>
+          <span class="value"><span id="mc-pct">70</span>%</span>
+        </label>
+        <input type="range" id="ratio-slider" min="0" max="100" value="70" step="10">
+        <div class="ratio-display">
+          <div><span class="label">객관식 MC</span><span class="num" id="mc-count">7</span></div>
+          <div><span class="label">주관식 SA</span><span class="num" id="sa-count">3</span></div>
+        </div>
+      </div>
+
+      <!-- ⭐ 일일 한도 & 예상 세션 수 -->
+      <div class="quota-info">
+        <div class="quota-info-header">
+          <span class="quota-info-title">Daily Capacity · 일일 여유</span>
+          <span class="quota-info-estimate">
+            오늘 약 <span class="num" id="quota-sessions">250</span>세션 가능
+          </span>
+        </div>
+        <div class="quota-info-detail">
+          현재 설정 기준, 전체 사용자가 <strong id="quota-total-calls">1</strong>번의 API 호출로 1세션을 완료합니다.
+        </div>
+        <div class="quota-info-breakdown">
+          <span><span class="dot gen"></span>문제 생성 · Flash 250/일</span>
+          <span><span class="dot grade"></span>주관식 채점 · Flash-Lite 1,000/일</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="start-btn">퀴즈 시작 · Begin</button>
+    </div>
+
+    <div class="footer">
+      <span>Powered by Gemini · Scripture from KJV &amp; 개역한글</span>
+    </div>
+  </section>
+
+  <!-- ============ LOADING ============ -->
+  <section id="loading-screen" class="screen">
+    <div class="loading-wrap">
+      <svg class="loading-bell" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="bellGrad2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e6c981"/><stop offset="100%" stop-color="#8b6f2f"/>
+        </linearGradient></defs>
+        <path d="M32 6 C30 6 29 7 29 9 L29 11 C22 13 17 20 17 28 L17 40 L14 44 L14 47 L50 47 L50 44 L47 40 L47 28 C47 20 42 13 35 11 L35 9 C35 7 34 6 32 6 Z" fill="url(#bellGrad2)"/>
+        <circle cx="32" cy="52" r="4" fill="#8b6f2f"/>
+      </svg>
+      <div class="loading-status" id="loading-title">성경을 읽고 있습니다</div>
+      <div class="loading-detail" id="loading-detail">Studying the scripture...</div>
+      <div class="loading-progress"><div class="loading-progress-bar"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ QUIZ ============ -->
+  <section id="quiz-screen" class="screen">
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="quiz-header">
+      <div class="quiz-counter">
+        Question <span class="current" id="q-current">1</span> <span class="total">/ <span id="q-total">10</span></span>
+      </div>
+      <div class="quiz-tag" id="q-tag">객관식 · Multiple Choice</div>
+    </div>
+
+    <div class="card question-card">
+      <div class="question-ko" id="q-ko"></div>
+      <div class="question-en" id="q-en">
+        <span id="q-en-text"></span>
+        <div class="question-reference" id="q-ref"></div>
+      </div>
+
+      <div id="q-options" class="options"></div>
+      <div id="q-sa" class="sa-input-wrap" style="display:none;">
+        <textarea id="sa-input" placeholder="답을 입력하세요... · Type your answer..."></textarea>
+        <button class="btn-primary sa-submit" id="sa-submit-btn">제출 · Submit</button>
+      </div>
+
+      <div class="feedback" id="feedback">
+        <div class="feedback-verdict" id="feedback-verdict"></div>
+        <div class="feedback-answer" id="feedback-answer"></div>
+        <div class="feedback-explanation" id="feedback-explanation"></div>
+      </div>
+
+      <div class="quiz-nav" id="quiz-nav" style="display:none;">
+        <button class="btn-primary" style="width:auto; min-width:200px;" id="next-btn">다음 · Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="result-screen" class="screen">
+    <div class="result-hero">
+      <div class="eyebrow">Final Score</div>
+      <div class="result-score">
+        <span id="final-score">0</span><span class="divisor">/<span id="final-total">10</span></span>
+      </div>
+      <div class="result-percent" id="final-percent">0%</div>
+      <div class="result-grade" id="final-grade"></div>
+    </div>
+
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom: 20px;">Review · 복기</div>
+      <div class="review-list" id="review-list"></div>
+      <button class="btn-primary" id="restart-btn" style="margin-top: 24px;">다시 도전 · Play Again</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const BOOKS = [
+  {ko:'창세기', en:'Genesis'}, {ko:'출애굽기', en:'Exodus'}, {ko:'레위기', en:'Leviticus'},
+  {ko:'민수기', en:'Numbers'}, {ko:'신명기', en:'Deuteronomy'}, {ko:'여호수아', en:'Joshua'},
+  {ko:'사사기', en:'Judges'}, {ko:'룻기', en:'Ruth'}, {ko:'사무엘상', en:'1 Samuel'},
+  {ko:'사무엘하', en:'2 Samuel'}, {ko:'열왕기상', en:'1 Kings'}, {ko:'열왕기하', en:'2 Kings'},
+  {ko:'역대상', en:'1 Chronicles'}, {ko:'역대하', en:'2 Chronicles'}, {ko:'에스라', en:'Ezra'},
+  {ko:'느헤미야', en:'Nehemiah'}, {ko:'에스더', en:'Esther'}, {ko:'욥기', en:'Job'},
+  {ko:'시편', en:'Psalms'}, {ko:'잠언', en:'Proverbs'}, {ko:'전도서', en:'Ecclesiastes'},
+  {ko:'아가', en:'Song of Solomon'}, {ko:'이사야', en:'Isaiah'}, {ko:'예레미야', en:'Jeremiah'},
+  {ko:'예레미야애가', en:'Lamentations'}, {ko:'에스겔', en:'Ezekiel'}, {ko:'다니엘', en:'Daniel'},
+  {ko:'호세아', en:'Hosea'}, {ko:'요엘', en:'Joel'}, {ko:'아모스', en:'Amos'},
+  {ko:'오바댜', en:'Obadiah'}, {ko:'요나', en:'Jonah'}, {ko:'미가', en:'Micah'},
+  {ko:'나훔', en:'Nahum'}, {ko:'하박국', en:'Habakkuk'}, {ko:'스바냐', en:'Zephaniah'},
+  {ko:'학개', en:'Haggai'}, {ko:'스가랴', en:'Zechariah'}, {ko:'말라기', en:'Malachi'},
+  {ko:'마태복음', en:'Matthew'}, {ko:'마가복음', en:'Mark'}, {ko:'누가복음', en:'Luke'},
+  {ko:'요한복음', en:'John'}, {ko:'사도행전', en:'Acts'}, {ko:'로마서', en:'Romans'},
+  {ko:'고린도전서', en:'1 Corinthians'}, {ko:'고린도후서', en:'2 Corinthians'},
+  {ko:'갈라디아서', en:'Galatians'}, {ko:'에베소서', en:'Ephesians'}, {ko:'빌립보서', en:'Philippians'},
+  {ko:'골로새서', en:'Colossians'}, {ko:'데살로니가전서', en:'1 Thessalonians'},
+  {ko:'데살로니가후서', en:'2 Thessalonians'}, {ko:'디모데전서', en:'1 Timothy'},
+  {ko:'디모데후서', en:'2 Timothy'}, {ko:'디도서', en:'Titus'}, {ko:'빌레몬서', en:'Philemon'},
+  {ko:'히브리서', en:'Hebrews'}, {ko:'야고보서', en:'James'}, {ko:'베드로전서', en:'1 Peter'},
+  {ko:'베드로후서', en:'2 Peter'}, {ko:'요한1서', en:'1 John'}, {ko:'요한2서', en:'2 John'},
+  {ko:'요한3서', en:'3 John'}, {ko:'유다서', en:'Jude'}, {ko:'요한계시록', en:'Revelation'}
+];
+
+// ⭐ 일일 한도 상수
+const QUOTA_FLASH_DAY = 250;       // 문제 생성 (Flash)
+const QUOTA_LITE_DAY = 1000;       // 주관식 채점 (Flash-Lite)
+
+const state = {
+  config: { bookIndex: 9, difficulty: '중', count: 10, mcRatio: 70 },
+  questions: [], currentIdx: 0, userAnswers: [], score: 0
+};
+
+const $ = (id) => document.getElementById(id);
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(name + '-screen').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function populateBooks() {
+  const otGroup = $('ot-group'), ntGroup = $('nt-group');
+  BOOKS.forEach((b, i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = `${b.ko} · ${b.en}`;
+    (i < 39 ? otGroup : ntGroup).appendChild(opt);
+  });
+  $('book-select').value = 9;
+}
+
+// ⭐ 일일 예상 세션 수 계산
+// Flash 쿼터 (생성): 250/일 ÷ 1회/세션 = 250세션
+// Flash-Lite 쿼터 (채점): 1000/일 ÷ (주관식 수)/세션
+// 둘 중 작은 값이 병목
+function calcDailyCapacity(count, mcRatio) {
+  const mc = Math.round(count * mcRatio / 100);
+  const sa = count - mc;
+
+  const genSessionsPerDay = QUOTA_FLASH_DAY;  // 항상 1회/세션
+
+  // 주관식이 0이면 채점 API 호출 없음 → 생성이 유일한 병목
+  const gradeSessionsPerDay = sa > 0 ? Math.floor(QUOTA_LITE_DAY / sa) : Infinity;
+
+  const minSessions = Math.min(genSessionsPerDay, gradeSessionsPerDay);
+  const totalCallsPerSession = 1 + sa;  // 최대치 (정확일치 fast-path 제외)
+
+  return {
+    sessions: minSessions,
+    totalCalls: totalCallsPerSession,
+    bottleneck: genSessionsPerDay <= gradeSessionsPerDay ? 'gen' : 'grade'
+  };
+}
+
+function updateQuotaDisplay() {
+  const { count, mcRatio } = state.config;
+  const { sessions, totalCalls } = calcDailyCapacity(count, mcRatio);
+  $('quota-sessions').textContent = sessions.toLocaleString();
+  $('quota-total-calls').textContent = totalCalls;
+}
+
+function setupControls() {
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.config.difficulty = btn.dataset.diff;
+    });
+  });
+  const countInput = $('count-input'), slider = $('ratio-slider');
+  const updateCounts = () => {
+    const total = Math.max(3, Math.min(50, parseInt(countInput.value) || 10));
+    const pct = parseInt(slider.value);
+    const mc = Math.round(total * pct / 100), sa = total - mc;
+    $('count-display').textContent = total;
+    $('mc-pct').textContent = pct; $('mc-count').textContent = mc; $('sa-count').textContent = sa;
+    state.config.count = total; state.config.mcRatio = pct;
+    updateQuotaDisplay();  // ⭐ 설정 변경 시 예상 세션 수 재계산
+  };
+  countInput.addEventListener('input', updateCounts);
+  slider.addEventListener('input', updateCounts);
+  $('book-select').addEventListener('change', e => { state.config.bookIndex = parseInt(e.target.value); });
+  $('start-btn').addEventListener('click', startQuiz);
+  $('restart-btn').addEventListener('click', () => {
+    state.questions = []; state.currentIdx = 0; state.userAnswers = []; state.score = 0;
+    clearSetupAlert();
+    showScreen('setup');
+  });
+  updateCounts();
+}
+
+async function apiCall(endpoint, body) {
+  const res = await fetch('/api/' + endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || `HTTP ${res.status}`);
+    err.code = data.code || ('HTTP_' + res.status);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+function setSetupAlert(type, title, msg) {
+  const cls = type === 'quota' ? 'error-box quota' : 'error-box';
+  $('setup-alert').innerHTML = `<div class="${cls}"><div class="title">${title}</div><div class="msg">${msg}</div></div>`;
+}
+function clearSetupAlert() { $('setup-alert').innerHTML = ''; }
+
+function setLoadingMessage(title, detail, warn = false) {
+  const t = $('loading-title'), d = $('loading-detail');
+  t.textContent = title;
+  d.textContent = detail;
+  t.classList.toggle('warn', warn);
+}
+
+async function startQuiz() {
+  const book = BOOKS[state.config.bookIndex];
+  clearSetupAlert();
+  showScreen('loading');
+  setLoadingMessage(`${book.ko}를 읽고 있습니다`, `Studying ${book.en}...`);
+
+  setTimeout(() => {
+    if ($('loading-screen').classList.contains('active')) {
+      setLoadingMessage('AI가 문제를 출제 중입니다', 'Composing questions...');
+    }
+  }, 2500);
+
+  const requestBody = {
+    bookIndex: state.config.bookIndex,
+    bookKo: book.ko, bookEn: book.en,
+    difficulty: state.config.difficulty,
+    count: state.config.count,
+    mcRatio: state.config.mcRatio,
+    modelTier: 'primary'
+  };
+
+  try {
+    let data;
+    try {
+      data = await apiCall('generate', requestBody);
+    } catch (err) {
+      if (err.code === 'SERVER_BUSY') {
+        setLoadingMessage(
+          '사용량이 붐빕니다. 다른 모델로 trying 하고 있습니다',
+          'Primary model is busy. Switching to lighter model...',
+          true
+        );
+        await new Promise(r => setTimeout(r, 1200));
+        data = await apiCall('generate', { ...requestBody, modelTier: 'lite' });
+      } else {
+        throw err;
+      }
+    }
+
+    if (!data.questions || data.questions.length === 0) {
+      throw new Error('문제를 생성하지 못했습니다. 다시 시도해 주세요.');
+    }
+
+    state.questions = data.questions;
+    state.currentIdx = 0; state.userAnswers = []; state.score = 0;
+    $('q-total').textContent = state.questions.length;
+    renderQuestion();
+    showScreen('quiz');
+
+  } catch (err) {
+    handleStartError(err);
+  }
+}
+
+function handleStartError(err) {
+  showScreen('setup');
+  if (err.code === 'SERVER_BUSY') {
+    setSetupAlert('error', 'Server Busy · 서버 혼잡',
+      '서버 사용량이 붐빕니다. 조금 뒤에 사용해주세요.');
+  } else if (err.code === 'QUOTA_EXCEEDED') {
+    setSetupAlert('quota', 'Daily Quota · 일일 할당량',
+      '일일 할당량이 도달했습니다. 다른 날에 도전해주세요.');
+  } else if (err.code === 'RATE_LIMIT') {
+    setSetupAlert('error', 'Too Many Requests · 요청 과다',
+      '잠시 동안 요청이 너무 많았습니다. 1분 후 다시 시도해주세요.');
+  } else if (err.code === 'CONFIG') {
+    setSetupAlert('error', 'Config Error · 설정 오류',
+      '서버에 API 키가 설정되지 않았습니다. 관리자에게 문의하세요.');
+  } else {
+    setSetupAlert('error', 'Error · 오류',
+      escapeHtml(err.message || '알 수 없는 오류가 발생했습니다.'));
+  }
+}
+
+function renderQuestion() {
+  const q = state.questions[state.currentIdx];
+  const idx = state.currentIdx, total = state.questions.length;
+
+  $('progress-fill').style.width = ((idx + 1) / total * 100) + '%';
+  $('q-current').textContent = idx + 1;
+
+  const tag = $('q-tag');
+  if (q.type === 'mc') {
+    tag.textContent = '객관식 · Multiple Choice'; tag.classList.remove('sa');
+  } else {
+    tag.textContent = '주관식 · Short Answer'; tag.classList.add('sa');
+  }
+
+  $('q-ko').textContent = q.question_ko;
+  $('q-en-text').textContent = q.question_en || '';
+  $('q-ref').textContent = q.reference || '';
+
+  $('feedback').classList.remove('show', 'correct', 'incorrect');
+  $('quiz-nav').style.display = 'none';
+
+  if (q.type === 'mc') {
+    $('q-options').style.display = 'flex'; $('q-sa').style.display = 'none';
+    renderMCOptions(q);
+  } else {
+    $('q-options').style.display = 'none'; $('q-sa').style.display = 'block';
+    const input = $('sa-input');
+    input.value = ''; input.disabled = false;
+    $('sa-submit-btn').disabled = false;
+    $('sa-submit-btn').textContent = '제출 · Submit';
+    setTimeout(() => input.focus(), 100);
+  }
+}
+
+function renderMCOptions(q) {
+  const box = $('q-options'); box.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${escapeHtml(opt)}</span>`;
+    btn.addEventListener('click', () => handleMCAnswer(i));
+    box.appendChild(btn);
+  });
+}
+
+function handleMCAnswer(selectedIdx) {
+  const q = state.questions[state.currentIdx];
+  const correctIdx = typeof q.answer === 'number' ? q.answer : parseInt(q.answer);
+  const isCorrect = selectedIdx === correctIdx;
+  const buttons = document.querySelectorAll('#q-options .option');
+  buttons.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correctIdx) btn.classList.add('correct');
+    else if (i === selectedIdx) btn.classList.add('wrong');
+  });
+  state.userAnswers.push({
+    questionIdx: state.currentIdx, userAnswer: q.options[selectedIdx], isCorrect
+  });
+  if (isCorrect) state.score++;
+  showFeedback(isCorrect, q.options[correctIdx], q.explanation_ko || '', q.reference);
+}
+
+async function handleSAAnswer() {
+  const q = state.questions[state.currentIdx];
+  const userAnswer = $('sa-input').value.trim();
+  if (!userAnswer) return;
+  $('sa-input').disabled = true;
+  $('sa-submit-btn').disabled = true;
+  $('sa-submit-btn').textContent = '채점 중... · Grading...';
+
+  const doGrade = async (modelTier) => apiCall('grade', {
+    question: q.question_ko,
+    correctAnswer: q.answer,
+    userAnswer,
+    reference: q.reference,
+    modelTier
+  });
+
+  try {
+    let result;
+    try {
+      result = await doGrade('primary');
+    } catch (err) {
+      if (err.code === 'SERVER_BUSY') {
+        $('sa-submit-btn').textContent = '사용량이 붐빕니다. 다른 모델로 trying...';
+        await new Promise(r => setTimeout(r, 800));
+        result = await doGrade('lite');
+      } else {
+        throw err;
+      }
+    }
+
+    const isCorrect = result.correct;
+    state.userAnswers.push({
+      questionIdx: state.currentIdx, userAnswer, isCorrect, feedback: result.feedback
+    });
+    if (isCorrect) state.score++;
+    showFeedback(isCorrect, q.answer,
+      (result.feedback || '') + ' ' + (q.explanation_ko || ''), q.reference);
+  } catch (err) {
+    if (err.code === 'QUOTA_EXCEEDED') {
+      setSetupAlert('quota', 'Daily Quota · 일일 할당량',
+        '일일 할당량이 도달했습니다. 다른 날에 도전해주세요.');
+      showScreen('setup');
+      return;
+    }
+    if (err.code === 'SERVER_BUSY') {
+      setSetupAlert('error', 'Server Busy · 서버 혼잡',
+        '서버 사용량이 붐빕니다. 조금 뒤에 사용해주세요.');
+      showScreen('setup');
+      return;
+    }
+    const normalize = s => String(s || '').replace(/\s/g, '').toLowerCase();
+    const isCorrect = normalize(userAnswer) === normalize(q.answer);
+    state.userAnswers.push({ questionIdx: state.currentIdx, userAnswer, isCorrect });
+    if (isCorrect) state.score++;
+    showFeedback(isCorrect, q.answer,
+      (q.explanation_ko || '') + ' (채점 서버 오류 — 간이 판정 사용)', q.reference);
+  } finally {
+    $('sa-submit-btn').textContent = '제출 · Submit';
+  }
+}
+
+function showFeedback(isCorrect, correctAnswer, explanation, reference) {
+  const fb = $('feedback');
+  fb.classList.add('show');
+  fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+  $('feedback-verdict').textContent = isCorrect ? '✓ Correct · 정답' : '✗ Incorrect · 오답';
+  $('feedback-answer').innerHTML = isCorrect
+    ? `<strong>정답!</strong> ${escapeHtml(String(correctAnswer))}`
+    : `정답은 <strong>${escapeHtml(String(correctAnswer))}</strong>입니다.`;
+  $('feedback-explanation').innerHTML = escapeHtml(explanation)
+    + (reference ? ` <span style="color:var(--gold); margin-left:8px;">(${escapeHtml(reference)})</span>` : '');
+  $('quiz-nav').style.display = 'flex';
+  $('next-btn').textContent = (state.currentIdx < state.questions.length - 1)
+    ? '다음 · Next' : '결과 보기 · See Results';
+}
+
+function handleNext() {
+  state.currentIdx++;
+  if (state.currentIdx >= state.questions.length) {
+    renderResults(); showScreen('result');
+  } else {
+    renderQuestion();
+  }
+}
+
+function renderResults() {
+  const total = state.questions.length, score = state.score;
+  const pct = Math.round(score / total * 100);
+  $('final-score').textContent = score;
+  $('final-total').textContent = total;
+  $('final-percent').textContent = pct + '%';
+  let grade;
+  if (pct === 100) grade = '🏆 완벽! Flawless Victory';
+  else if (pct >= 90) grade = '🌟 탁월함 · Excellent';
+  else if (pct >= 70) grade = '✨ 훌륭함 · Great Job';
+  else if (pct >= 50) grade = '📖 계속 정진 · Keep Going';
+  else grade = '🕯 말씀과 더 가까이 · More Scripture Awaits';
+  $('final-grade').textContent = grade;
+
+  const list = $('review-list'); list.innerHTML = '';
+  state.userAnswers.forEach((ans, i) => {
+    const q = state.questions[ans.questionIdx];
+    const item = document.createElement('div');
+    item.className = 'review-item ' + (ans.isCorrect ? 'correct' : 'incorrect');
+    const correctDisplay = q.type === 'mc'
+      ? q.options[typeof q.answer === 'number' ? q.answer : parseInt(q.answer)]
+      : q.answer;
+    item.innerHTML = `
+      <div class="review-item-header">
+        <span>Q${i+1} · ${q.type === 'mc' ? '객관식' : '주관식'} · ${escapeHtml(q.reference || '')}</span>
+        <span>${ans.isCorrect ? '✓' : '✗'}</span>
+      </div>
+      <div class="review-item-q">${escapeHtml(q.question_ko)}</div>
+      <div class="review-item-a">
+        내 답: <strong>${escapeHtml(String(ans.userAnswer))}</strong>
+        ${!ans.isCorrect ? ` · 정답: <strong>${escapeHtml(String(correctDisplay))}</strong>` : ''}
+      </div>`;
+    list.appendChild(item);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  populateBooks();
+  setupControls();
+  $('next-btn').addEventListener('click', handleNext);
+  $('sa-submit-btn').addEventListener('click', handleSAAnswer);
+  $('sa-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSAAnswer();
+  });
+});
+</script>
+</body>
+</html>
