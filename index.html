@@ -149,7 +149,7 @@
   .ratio-display .label { color: var(--ink-dim); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 2px; }
   .ratio-display .num { color: var(--gold-bright); font-weight: 700; font-size: 22px; font-family: 'Cormorant Garamond', serif; }
 
-  /* ⭐ 새로 추가: 일일 한도 정보 박스 */
+  /* ⭐ 일일 한도 정보 박스 */
   .quota-info {
     margin: 20px 0 8px;
     padding: 18px 22px;
@@ -159,13 +159,10 @@
     position: relative;
     z-index: 1;
   }
-  .quota-info-header {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 10px;
-  }
   .quota-info-title {
     font-family: 'Cormorant Garamond', serif; font-style: italic;
     font-size: 13px; color: var(--gold); letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 8px;
   }
   .quota-info-estimate {
     font-family: 'Noto Serif KR', serif; font-weight: 700;
@@ -176,22 +173,10 @@
     font-size: 26px; font-weight: 700; color: var(--gold-bright);
     margin-right: 2px;
   }
-  .quota-info-detail {
+  .quota-info-hint {
     font-family: 'Manrope', sans-serif; font-size: 12px;
-    color: var(--ink-dim); line-height: 1.6;
+    color: var(--ink-dim); margin-top: 4px; letter-spacing: 0.02em;
   }
-  .quota-info-detail strong { color: var(--ink); font-weight: 600; }
-  .quota-info-breakdown {
-    display: flex; gap: 16px; margin-top: 8px;
-    font-size: 11px; color: var(--ink-soft);
-    font-family: 'Cormorant Garamond', serif; letter-spacing: 0.05em;
-  }
-  .quota-info-breakdown span { display: inline-flex; align-items: center; gap: 6px; }
-  .quota-info-breakdown .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-  }
-  .quota-info-breakdown .dot.gen { background: var(--gold); }
-  .quota-info-breakdown .dot.grade { background: var(--emerald); }
 
   .btn-primary {
     width: 100%; background: linear-gradient(180deg, var(--gold), var(--gold-deep));
@@ -415,7 +400,7 @@
           <span>Question Count <span class="ko">문제 수</span></span>
           <span class="value" id="count-display">10</span>
         </label>
-        <input type="number" id="count-input" min="3" max="50" value="10">
+        <input type="number" id="count-input" min="10" max="20" value="10">
       </div>
 
       <div class="field">
@@ -430,21 +415,13 @@
         </div>
       </div>
 
-      <!-- ⭐ 일일 한도 & 예상 세션 수 -->
+      <!-- ⭐ 일일 한도 표시 -->
       <div class="quota-info">
-        <div class="quota-info-header">
-          <span class="quota-info-title">Daily Capacity · 일일 여유</span>
-          <span class="quota-info-estimate">
-            오늘 약 <span class="num" id="quota-sessions">250</span>세션 가능
-          </span>
+        <div class="quota-info-title">Daily Capacity · 일일 여유</div>
+        <div class="quota-info-estimate">
+          오늘 약 <span class="num" id="quota-questions">2,500</span>문제 생성 가능
         </div>
-        <div class="quota-info-detail">
-          현재 설정 기준, 전체 사용자가 <strong id="quota-total-calls">1</strong>번의 API 호출로 1세션을 완료합니다.
-        </div>
-        <div class="quota-info-breakdown">
-          <span><span class="dot gen"></span>문제 생성 · Flash 250/일</span>
-          <span><span class="dot grade"></span>주관식 채점 · Flash-Lite 1,000/일</span>
-        </div>
+        <div class="quota-info-hint" id="quota-config-hint">(10문제 객관식 70% 기준)</div>
       </div>
 
       <button class="btn-primary" id="start-btn">퀴즈 시작 · Begin</button>
@@ -520,7 +497,8 @@
     <div class="card">
       <div class="eyebrow" style="margin-bottom: 20px;">Review · 복기</div>
       <div class="review-list" id="review-list"></div>
-      <button class="btn-primary" id="restart-btn" style="margin-top: 24px;">다시 도전 · Play Again</button>
+      <button class="btn-primary" id="retry-wrong-btn" style="margin-top: 24px; display: none;">오답 다시 풀기 · Retry Wrong Answers</button>
+      <button class="btn-primary" id="restart-btn" style="margin-top: 12px;">처음으로 돌아가기 · Home</button>
     </div>
   </section>
 
@@ -559,7 +537,8 @@ const QUOTA_LITE_DAY = 1000;       // 주관식 채점 (Flash-Lite)
 
 const state = {
   config: { bookIndex: 9, difficulty: '중', count: 10, mcRatio: 70 },
-  questions: [], currentIdx: 0, userAnswers: [], score: 0
+  questions: [], currentIdx: 0, userAnswers: [], score: 0,
+  retryMode: false
 };
 
 const $ = (id) => document.getElementById(id);
@@ -587,26 +566,22 @@ function calcDailyCapacity(count, mcRatio) {
   const mc = Math.round(count * mcRatio / 100);
   const sa = count - mc;
 
-  const genSessionsPerDay = QUOTA_FLASH_DAY;  // 항상 1회/세션
-
-  // 주관식이 0이면 채점 API 호출 없음 → 생성이 유일한 병목
+  const genSessionsPerDay = QUOTA_FLASH_DAY;
   const gradeSessionsPerDay = sa > 0 ? Math.floor(QUOTA_LITE_DAY / sa) : Infinity;
-
-  const minSessions = Math.min(genSessionsPerDay, gradeSessionsPerDay);
-  const totalCallsPerSession = 1 + sa;  // 최대치 (정확일치 fast-path 제외)
+  const sessions = Math.min(genSessionsPerDay, gradeSessionsPerDay);
 
   return {
-    sessions: minSessions,
-    totalCalls: totalCallsPerSession,
+    sessions,
+    totalQuestions: sessions === Infinity ? Infinity : sessions * count,
     bottleneck: genSessionsPerDay <= gradeSessionsPerDay ? 'gen' : 'grade'
   };
 }
 
 function updateQuotaDisplay() {
   const { count, mcRatio } = state.config;
-  const { sessions, totalCalls } = calcDailyCapacity(count, mcRatio);
-  $('quota-sessions').textContent = sessions.toLocaleString();
-  $('quota-total-calls').textContent = totalCalls;
+  const { totalQuestions } = calcDailyCapacity(count, mcRatio);
+  $('quota-questions').textContent = totalQuestions.toLocaleString();
+  $('quota-config-hint').textContent = `(${count}문제 객관식 ${mcRatio}% 기준)`;
 }
 
 function setupControls() {
@@ -619,7 +594,7 @@ function setupControls() {
   });
   const countInput = $('count-input'), slider = $('ratio-slider');
   const updateCounts = () => {
-    const total = Math.max(3, Math.min(50, parseInt(countInput.value) || 10));
+    const total = Math.max(10, Math.min(20, parseInt(countInput.value) || 10));
     const pct = parseInt(slider.value);
     const mc = Math.round(total * pct / 100), sa = total - mc;
     $('count-display').textContent = total;
@@ -633,6 +608,7 @@ function setupControls() {
   $('start-btn').addEventListener('click', startQuiz);
   $('restart-btn').addEventListener('click', () => {
     state.questions = []; state.currentIdx = 0; state.userAnswers = []; state.score = 0;
+    state.retryMode = false;
     clearSetupAlert();
     showScreen('setup');
   });
@@ -904,6 +880,10 @@ function renderResults() {
   else grade = '🕯 말씀과 더 가까이 · More Scripture Awaits';
   $('final-grade').textContent = grade;
 
+  const wrongCount = state.userAnswers.filter(a => !a.isCorrect).length;
+  const canRetry = wrongCount > 0 && !state.retryMode;
+  $('retry-wrong-btn').style.display = canRetry ? 'block' : 'none';
+
   const list = $('review-list'); list.innerHTML = '';
   state.userAnswers.forEach((ans, i) => {
     const q = state.questions[ans.questionIdx];
@@ -926,6 +906,23 @@ function renderResults() {
   });
 }
 
+function startRetry() {
+  const wrongQuestions = state.userAnswers
+    .filter(a => !a.isCorrect)
+    .map(a => state.questions[a.questionIdx]);
+  if (wrongQuestions.length === 0) return;
+
+  state.questions = wrongQuestions;
+  state.currentIdx = 0;
+  state.userAnswers = [];
+  state.score = 0;
+  state.retryMode = true;
+
+  $('q-total').textContent = state.questions.length;
+  renderQuestion();
+  showScreen('quiz');
+}
+
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, c =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -936,6 +933,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupControls();
   $('next-btn').addEventListener('click', handleNext);
   $('sa-submit-btn').addEventListener('click', handleSAAnswer);
+  $('retry-wrong-btn').addEventListener('click', startRetry);
   $('sa-input').addEventListener('keydown', e => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSAAnswer();
   });

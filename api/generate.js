@@ -196,8 +196,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: '잘못된 난이도', errorCode: 'INVALID_INPUT' });
     }
     const n = parseInt(count);
-    if (isNaN(n) || n < 3 || n > 50) {
-      return res.status(400).json({ error: '문제 수는 3~50 사이여야 합니다.', errorCode: 'INVALID_INPUT' });
+    if (isNaN(n) || n < 10 || n > 20) {
+      return res.status(400).json({ error: '문제 수는 10~20 사이여야 합니다.', errorCode: 'INVALID_INPUT' });
     }
     const ratio = parseInt(mcRatio);
     if (isNaN(ratio) || ratio < 0 || ratio > 100) {
